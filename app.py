@@ -3,6 +3,7 @@ import os
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session import Session
+import re
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from helpers import apology, login_required, lookup, usd
@@ -56,9 +57,6 @@ def history():
 def login():
     """Log user in"""
 
-    # Forget any user_id
-    session.clear()
-
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
@@ -109,7 +107,42 @@ def quote():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
-    return apology("TODO")
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        confirmation = request.form.get("confirmation")
+
+        # Make sure username has enough characters
+        if len(username) < 3:
+            flash("Username must be at least 3 characters.", "danger")
+            return render_template('register.html', username=username, password=password, confirmation=confirmation)
+
+        # Make sure the username has valid characters
+        if not re.match("^[\w.]+$", username):
+            flash("Usernames can only use letters, numbers, underscores and periods.", "danger")
+            return render_template('register.html', username=username, password=password, confirmation=confirmation)
+
+        # Make sure the username is not taken
+        rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
+        if len(rows) != 0:
+            flash("This username isn't available. Please try another.", "danger")
+            return render_template('register.html', username=username, password=password, confirmation=confirmation)
+        
+        # Make sure the password has enough characters
+        if len(password) < 5:
+            flash("Password must be at least 5 characters.", "danger")
+            return render_template('register.html', username=username, password=password, confirmation=confirmation)
+
+        # Make sure the password matches the confirm password
+        if password != confirmation:
+            flash("The passwords you entered do not match.", "danger")
+            return render_template('register.html', username=username, password=password, confirmation=confirmation)
+
+        # All criteria are met, Add user to the database
+        db.execute("INSERT INTO users (username, hash) VALUES(?, ?)", username, generate_password_hash(password))
+        return redirect("/")
+
+    return render_template('register.html', username='', password='', confirmation='')
 
 
 @app.route("/sell", methods=["GET", "POST"])
