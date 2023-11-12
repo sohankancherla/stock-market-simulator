@@ -4,9 +4,10 @@ from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session import Session
 import re
+import requests
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import apology, login_required, lookup, usd
+from helpers import login_required, lookup, usd
 
 # Configure application
 app = Flask(__name__)
@@ -43,7 +44,31 @@ def index():
 @login_required
 def buy():
     """Buy shares of stock"""
-    return apology("TODO")
+    if request.method == "POST":
+        stock = request.form.get("search")
+        url = f'https://ticker-2e1ica8b9.now.sh/keyword/{stock}'
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            result = []
+            data = response.json()
+            for stock in data:
+                symbol = stock.get('symbol')
+                name = stock.get('name')
+                result.append(lookup(symbol, name))
+            
+            result = [element for element in result if element is not None]
+            
+            if not result:
+                flash("No results found.", "danger")
+                return render_template('buy.html', search=stock)
+            else:
+                return render_template('buy.html', result=result)
+        else:
+            flash("Error retrieving data.", "danger")
+            return render_template('buy.html', search=stock)
+    else:
+        return render_template('buy.html')
 
 
 @app.route("/history")
@@ -105,14 +130,6 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")
-
-
-@app.route("/quote", methods=["GET", "POST"])
-@login_required
-def quote():
-    """Get stock quote."""
-    return apology("TODO")
-
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
