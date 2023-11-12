@@ -52,9 +52,9 @@ def buy():
         if response.status_code == 200:
             result = []
             data = response.json()
-            for stock in data:
-                symbol = stock.get('symbol')
-                name = stock.get('name')
+            for i in data:
+                symbol = i.get('symbol')
+                name = i.get('name')
                 result.append(lookup(symbol, name))
             
             result = [element for element in result if element is not None]
@@ -63,12 +63,12 @@ def buy():
                 flash("No results found.", "danger")
                 return render_template('buy.html', search=stock)
             else:
-                return render_template('buy.html', result=result)
+                return render_template('buy.html', result=result, search=stock)
         else:
             flash("Error retrieving data.", "danger")
             return render_template('buy.html', search=stock)
     else:
-        return render_template('buy.html')
+        return render_template('buy.html', search="")
 
 
 @app.route("/history")
