@@ -35,24 +35,64 @@
                         <tr>
                             <td class="text-start align-middle">{{ stock.symbol }}</td>
                             <td class="text-start align-middle">{{ stock.name }}</td>
-                            <td class="text-end align-middle">{{ stock.price }}</td>
+                            <td class="text-end align-middle">{{ stock.price | usd }}</td>
                             {% if stock.change >= 0 %}
-                                <td class="text-end align-middle text-success">+{{ stock.change }}</td>
+                                <td class="text-end align-middle text-success">+{{ stock.change | usd }}</td>
                             {% else %}
-                                <td class="text-end align-middle text-danger">{{ stock.change }}</td>
+                                <td class="text-end align-middle text-danger">{{ stock.change | usd }}</td>
                             {% endif %}
                             <td class="text-end align-middle">
-                                <form action="/delete" method="post" style="display: inline">
-                                    <input name="symbol" type="hidden" value="{{ stock.symbol }}">
-                                    <button class="btn btn-dark">Watch</button>
-                                </form>
-                                <form action="/delete" method="post" style="display: inline">
-                                    <input name="symbol" type="hidden" value="{{ stock.symbol }}">
-                                    <button class="btn btn-success">Buy</button>
-                                </form>
+                                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#buy-modal-{{ stock.symbol }}">Buy</button>
                             </td>
-
                         </tr>
+                        <div class="modal fade" id="buy-modal-{{ stock.symbol }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="buy-modal-label" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="buy-modal-label">Buy {{ stock.symbol }}</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="/buy" method="get">
+                                        <div class="modal-body" style="text-align: left;">
+                        
+                                            <input name="symbol" type="hidden" value="{{ stock.symbol }}">
+                                            <input name="name" type="hidden" value="{{ stock.name }}">
+                                            <input id="price-hidden-{{ stock.symbol }}" type="hidden" value="{{ stock.price }}">
+                        
+                                            <div style="display: flex; justify-content: left; align-items: center; gap: 10px; margin-bottom: 15px;">
+                                                <span style="font-weight: bold;">Shares:</span>
+                                                <input type="number" class="form-control" style="width: 100px; display: inline-block;" autocomplete="off" autofocus name="shares" id="shares-{{ stock.symbol }}" placeholder="0" min="1" required oninput="updatePrice{{ stock.symbol }}()">
+                                                <span style="font-weight: bold;">Price:</span>
+                                                <span id="priceDisplay-{{ stock.symbol }}" style="font-weight: bold;">$ 0.00</span>
+                                            </div>
+                        
+                                            <input type="hidden" name="price" id="totalPrice-{{ stock.symbol }}">
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-success">Buy</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <script>
+                            document.getElementById('shares-{{ stock.symbol }}').addEventListener('keydown', function(event) {
+                                if (event.key === 'Enter') {
+                                    event.preventDefault();
+                                    return false;
+                                }
+                            });
+                        
+                            function updatePrice{{ stock.symbol }}() {
+                                var shares = document.getElementById('shares-{{ stock.symbol }}').value;
+                                var price = document.getElementById('price-hidden-{{ stock.symbol }}').value;
+                                var totalPrice = shares * price;
+                                document.getElementById('priceDisplay-{{ stock.symbol }}').textContent = '$' + totalPrice.toFixed(2);
+                                document.getElementById('totalPrice-{{ stock.symbol }}').value = totalPrice.toFixed(2);
+                            }
+                        </script>                        
                     {% endfor %}
                 </tbody>
             </table>
