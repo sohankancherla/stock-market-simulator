@@ -1,13 +1,15 @@
 import os
-
+from config import API_KEY
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session import Session
 import re
 import requests
 from werkzeug.security import check_password_hash, generate_password_hash
-
 from helpers import login_required, lookup, usd
+
+# Replace API_KEY with your own API key
+api_key=API_KEY
 
 # Configure application
 app = Flask(__name__)
@@ -40,35 +42,37 @@ def index():
     return apology("TODO")
 
 
-@app.route("/buy", methods=["GET", "POST"])
+@app.route("/search", methods=["GET", "POST"])
 @login_required
 def buy():
-    """Buy shares of stock"""
+    """Search for stock"""
     if request.method == "POST":
         stock = request.form.get("search")
-        url = f'https://ticker-2e1ica8b9.now.sh/keyword/{stock}'
+        url = f"https://finnhub.io/api/v1/search?q={stock}&token={api_key}"
         response = requests.get(url)
+        data = response.json()
 
-        if response.status_code == 200:
+        if response.status_code == 200 and data["result"]:
             result = []
-            data = response.json()
+            data = data["result"]
             for i in data:
                 symbol = i.get('symbol')
-                name = i.get('name')
-                result.append(lookup(symbol, name))
-            
-            result = [element for element in result if element is not None]
-            
+                name = i.get("description")
+                if "." not in symbol:
+                    stock_info = lookup(symbol, name)
+                    if stock_info:
+                        result.append(stock_info)
+                            
             if not result:
                 flash("No results found.", "danger")
-                return render_template('buy.html', search=stock)
+                return render_template('search.html', search=stock)
             else:
-                return render_template('buy.html', result=result, search=stock)
+                return render_template('search.html', result=result, search=stock)
         else:
             flash("Error retrieving data.", "danger")
-            return render_template('buy.html', search=stock)
+            return render_template('search.html', search=stock)
     else:
-        return render_template('buy.html', search="")
+        return render_template('search.html', search="")
 
 
 @app.route("/history")
