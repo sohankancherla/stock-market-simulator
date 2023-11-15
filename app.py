@@ -83,7 +83,8 @@ def search():
 @login_required
 def history():
     """Show history of transactions"""
-    return apology("TODO")
+    result = db.execute("SELECT symbol, name, shares, price, time FROM users JOIN history ON user_id WHERE id = ?", session["user_id"])
+    return render_template("history.html", result=result)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -194,6 +195,10 @@ def buy():
         time = current_time()
         db.execute("INSERT INTO portfolio (user_id, symbol, name, shares, price) VALUES(?, ?, ?, ?, ?)", session["user_id"], symbol, name, shares, price)
         db.execute("INSERT INTO history (user_id, symbol, name, shares, price, time) VALUES(?, ?, ?, ?, ?, ?)", session["user_id"], symbol, name, shares, price, time)
+        count = db.execute("SELECT COUNT(*) FROM history WHERE user_id = ?", session["user_id"])
+        count = count[0]['COUNT(*)']
+        if count > 10:
+            db.execute("DELETE FROM history WHERE rowid = (SELECT rowid FROM history WHERE user_id = ? ORDER BY time ASC LIMIT 1)", session["user_id"])
         return redirect("/search")
 
 
