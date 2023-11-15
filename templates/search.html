@@ -52,7 +52,7 @@
                                         <h1 class="modal-title fs-5" id="buy-modal-label">Buy {{ stock.symbol }}</h1>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                    <form action="/buy" method="get">
+                                    <form action="/buy" method="post">
                                         <div class="modal-body" style="text-align: left;">
                         
                                             <input name="symbol" type="hidden" value="{{ stock.symbol }}">
@@ -65,8 +65,7 @@
                                                 <span style="font-weight: bold;">Price:</span>
                                                 <span id="priceDisplay-{{ stock.symbol }}" style="font-weight: bold;">$ 0.00</span>
                                             </div>
-                        
-                                            <input type="hidden" name="price" id="totalPrice-{{ stock.symbol }}">
+                                            <span style="font-size: 14px;">Purchase is made on current market price not the price shown</span>
                                         </div>
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
@@ -90,7 +89,6 @@
                                 var price = document.getElementById('price-hidden-{{ stock.symbol }}').value;
                                 var totalPrice = shares * price;
                                 document.getElementById('priceDisplay-{{ stock.symbol }}').textContent = '$' + totalPrice.toFixed(2);
-                                document.getElementById('totalPrice-{{ stock.symbol }}').value = totalPrice.toFixed(2);
                             }
                         </script>                        
                     {% endfor %}

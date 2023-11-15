@@ -60,3 +60,7 @@ def usd(value):
         return f"${value:,.2f}"
     else:
         return f"-${abs(value):,.2f}"
+
+def current_time():
+    tz = pytz.timezone('America/New_York')
+    return datetime.datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")

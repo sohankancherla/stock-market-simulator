@@ -6,7 +6,7 @@ from flask_session import Session
 import re
 import requests
 from werkzeug.security import check_password_hash, generate_password_hash
-from helpers import login_required, lookup, usd
+from helpers import login_required, lookup, usd, current_time
 
 # Replace API_KEY with your own API key
 api_key=API_KEY
@@ -44,7 +44,7 @@ def index():
 
 @app.route("/search", methods=["GET"])
 @login_required
-def buy():
+def search():
     """Search for stock"""
     stock = request.args.get("q")
     if stock != None:
@@ -178,6 +178,23 @@ def register():
         return redirect("/")
 
     return render_template('register.html', username='', password='', confirmation='')
+
+@app.route("/buy", methods=["POST"])
+@login_required
+def buy():
+    """buy shares of stock"""
+    symbol = request.form.get("symbol")
+    name = request.form.get("name")
+    shares = request.form.get("shares")
+    stock_info = lookup(symbol, name)
+    if stock_info == None:
+        pass
+    else:
+        price = stock_info["price"]
+        time = current_time()
+        db.execute("INSERT INTO portfolio (user_id, symbol, name, shares, price) VALUES(?, ?, ?, ?, ?)", session["user_id"], symbol, name, shares, price)
+        db.execute("INSERT INTO history (user_id, symbol, name, shares, price, time) VALUES(?, ?, ?, ?, ?, ?)", session["user_id"], symbol, name, shares, price, time)
+        return redirect("/search")
 
 
 @app.route("/sell", methods=["GET", "POST"])
