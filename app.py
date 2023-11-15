@@ -42,34 +42,38 @@ def index():
     return apology("TODO")
 
 
-@app.route("/search", methods=["GET", "POST"])
+@app.route("/search", methods=["GET"])
 @login_required
 def buy():
     """Search for stock"""
-    if request.method == "POST":
-        stock = request.form.get("search")
-        url = f"https://finnhub.io/api/v1/search?q={stock}&token={api_key}"
-        response = requests.get(url)
-        data = response.json()
+    stock = request.args.get("q")
+    if stock != None:
+        if stock.strip():
+            url = f"https://finnhub.io/api/v1/search?q={stock}&token={api_key}"
+            response = requests.get(url)
+            data = response.json()
 
-        if response.status_code == 200 and data["result"]:
-            result = []
-            data = data["result"]
-            for i in data:
-                symbol = i.get('symbol')
-                name = i.get("description")
-                if "." not in symbol:
-                    stock_info = lookup(symbol, name)
-                    if stock_info:
-                        result.append(stock_info)
-                            
-            if not result:
-                flash("No results found.", "danger")
-                return render_template('search.html', search=stock)
+            if response.status_code == 200 and data["result"]:
+                result = []
+                data = data["result"]
+                for i in data:
+                    symbol = i.get('symbol')
+                    name = i.get("description")
+                    if "." not in symbol:
+                        stock_info = lookup(symbol, name)
+                        if stock_info:
+                            result.append(stock_info)
+                                
+                if not result:
+                    flash("No results found.", "danger")
+                    return render_template('search.html', search=stock)
+                else:
+                    return render_template('search.html', result=result, search=stock)
             else:
-                return render_template('search.html', result=result, search=stock)
+                flash("Error retrieving data.", "danger")
+                return render_template('search.html', search=stock)
         else:
-            flash("Error retrieving data.", "danger")
+            flash("Please enter a symbol or company name.", "danger")
             return render_template('search.html', search=stock)
     else:
         return render_template('search.html', search="")

@@ -6,8 +6,12 @@ import subprocess
 import urllib
 import uuid
 
+from config import API_KEY
 from flask import redirect, render_template, session
 from functools import wraps
+
+# Replace API_KEY with your own API key
+api_key=API_KEY
 
 def login_required(f):
     """
@@ -27,32 +31,25 @@ def lookup(symbol, name):
     """Look up quote for symbol."""
 
     # Prepare API request
-    symbol = symbol.upper()
-    end = datetime.datetime.now(pytz.timezone("US/Eastern"))
-    start = end - datetime.timedelta(days=7)
+    symbol = symbol
 
-    # Yahoo Finance API
-    url = (
-        f"https://query1.finance.yahoo.com/v7/finance/download/{urllib.parse.quote_plus(symbol)}"
-        f"?period1={int(start.timestamp())}"
-        f"&period2={int(end.timestamp())}"
-        f"&interval=1d&events=history&includeAdjustedClose=true"
-    )
+    # Finnhub API
+    url = (f"https://finnhub.io/api/v1/quote?symbol={symbol}&token={api_key}")
 
     # Query API
     try:
-        response = requests.get(url, cookies={"session": str(uuid.uuid4())}, headers={"User-Agent": "python-requests", "Accept": "*/*"})
-        response.raise_for_status()
-
-        # CSV header: Date,Open,High,Low,Close,Adj Close,Volume
-        quotes = list(csv.DictReader(response.content.decode("utf-8").splitlines()))
-        quotes.reverse()
-        price = round(float(quotes[0]["Adj Close"]), 2)
-        return {
-            "name": name,
-            "price": price,
-            "symbol": symbol
-        }
+        response = requests.get(url)
+        response = requests.get(url)
+        data = response.json()
+        price = data["c"]
+        change = data["d"]
+        if change != None and price != None:
+            return {
+                "name": name,
+                "price": price,
+                "change": change,
+                "symbol": symbol
+            }
     except (requests.RequestException, ValueError, KeyError, IndexError):
         return None
 
