@@ -80,7 +80,54 @@
                                 var totalPrice = shares * price;
                                 document.getElementById('priceDisplay-{{ stock.symbol }}').textContent = '$' + totalPrice.toFixed(2);
                             }
-                        </script>                        
+                        </script>
+
+                        <div class="modal fade" id="sell-modal-{{ stock.symbol }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="sell-modal-label" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="sell-modal-label">Sell {{ stock.symbol }}</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="/sell" method="post">
+                                        <div class="modal-body" style="text-align: left;">
+                        
+                                            <input name="symbol" type="hidden" value="{{ stock.symbol }}">
+                                            <input name="name" type="hidden" value="{{ stock.name }}">
+                                            <input id="sell-price-hidden-{{ stock.symbol }}" type="hidden" value="{{ current_price }}">
+                        
+                                            <div style="display: flex; justify-content: left; align-items: center; gap: 10px; margin-bottom: 15px;">
+                                                <span style="font-weight: bold;">Shares:</span>
+                                                <input type="number" class="form-control" style="width: 100px; display: inline-block;" autocomplete="off" autofocus name="shares" id="sell-shares-{{ stock.symbol }}" placeholder="0" min="1" max="{{ stock.shares }}" required oninput="sellUpdatePrice{{ stock.symbol }}()">
+                                                <span style="font-weight: bold;">Price:</span>
+                                                <span id="sellPriceDisplay-{{ stock.symbol }}" style="font-weight: bold;">$ 0.00</span>
+                                            </div>
+                                            <span style="font-size: 14px;">Sale is made on current market price not the price shown</span>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-danger">Sell</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <script>
+                            document.getElementById('sell-shares-{{ stock.symbol }}').addEventListener('keydown', function(event) {
+                                if (event.key === 'Enter') {
+                                    event.preventDefault();
+                                    return false;
+                                }
+                            });
+                        
+                            function sellUpdatePrice{{ stock.symbol }}() {
+                                var shares = document.getElementById('sell-shares-{{ stock.symbol }}').value;
+                                var price = document.getElementById('sell-price-hidden-{{ stock.symbol }}').value;
+                                var totalPrice = shares * price;
+                                document.getElementById('sellPriceDisplay-{{ stock.symbol }}').textContent = '$' + totalPrice.toFixed(2);
+                            }
+                        </script>                      
                     {% endfor %}
                 </tbody>
                 <tfoot>

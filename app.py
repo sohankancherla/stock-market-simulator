@@ -232,8 +232,28 @@ def buy():
         return redirect("/")
 
 
-@app.route("/sell", methods=["GET", "POST"])
+@app.route("/sell", methods=["POST"])
 @login_required
 def sell():
-    """Sell shares of stock"""
-    return apology("TODO")
+    symbol = request.form.get("symbol")
+    name = request.form.get("name")
+    shares = request.form.get("shares")
+    stock_info = lookup(symbol, name)
+    if stock_info == None:
+        flash("Unable to sell.", "danger")
+        return redirect("/")
+    else:
+        price = stock_info["price"]
+        balance = db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])[0]["cash"]
+        time = current_time()
+        found = False
+        rows = db.execute("SELECT shares FROM portfolio WHERE user_id = ? AND symbol = ?", session["user_id"], symbol)
+        shares_owned = rows[0]["shares"]
+        if int(shares) < shares_owned:
+            db.execute("UPDATE portfolio SET shares=shares-? WHERE user_id=? AND symbol=?", shares, session["user_id"], symbol)
+        else:
+            db.execute("DELETE FROM portfolio WHERE user_id = ? AND symbol = ?", session["user_id"], symbol)
+        db.execute("INSERT INTO history (user_id, symbol, name, shares, price, time) VALUES(?, ?, ?, ?, ?, ?)", session["user_id"], symbol, name, int(shares) * -1, price, time)
+        db.execute("UPDATE users SET cash=cash+? WHERE id=?", (float(shares) * float(price)), session["user_id"])
+        flash("Sold.", "success")
+        return redirect("/")
