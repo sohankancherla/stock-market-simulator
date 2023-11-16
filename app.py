@@ -257,3 +257,11 @@ def sell():
         db.execute("UPDATE users SET cash=cash+? WHERE id=?", (float(shares) * float(price)), session["user_id"])
         flash("Sold.", "success")
         return redirect("/")
+
+@app.route("/balance", methods=["POST"])
+@login_required
+def balance():
+    balance = request.form.get("balance")
+    db.execute("UPDATE users SET cash=? WHERE id=?", balance, session["user_id"])
+    flash("Changed Balance.", "success")
+    return redirect("/")

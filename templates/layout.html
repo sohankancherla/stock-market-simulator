@@ -36,6 +36,7 @@
                             <li class="nav-item"><a class="nav-link" href="/history">History</a></li>
                         </ul>
                         <ul class="navbar-nav ms-auto mt-2">
+                            <li class="nav-item" data-bs-toggle="modal" data-bs-target="#balance" style="cursor: pointer"><a class="nav-link">Change Balance</a></li>
                             <li class="nav-item"><a class="nav-link" href="/logout">Log Out</a></li>
                         </ul>
                     {% else %}
@@ -47,6 +48,29 @@
                 </div>
             </div>
         </nav>
+        <div class="modal fade" id="balance" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="balance-label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="balance-label">Change Balance</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="/balance" method="post">
+                        <div class="modal-body" style="text-align: left;">
+                            <div style="display: flex; justify-content: left; align-items: center; gap: 10px; margin-bottom: 15px;">
+                                <span style="font-weight: bold;">Balance:</span>
+                                <input type="number" class="form-control" style="width: 100px; display: inline-block;" autocomplete="off" autofocus name="balance" placeholder="0" min="1" max="1000000" required>
+                            </div>
+                            <span style="font-size: 14px;">Change your current balance max of $1 million.</span>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">Change</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
