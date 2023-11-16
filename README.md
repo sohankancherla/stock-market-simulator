@@ -18,7 +18,7 @@
   * [Installation](#installation)
 * [Usage](#usage)
 * [Authors](#authors)
-* [Acknowledgements](#acknowledgents)
+* [Acknowledgements](#acknowledgements)
 
 ## About The Project
 
