@@ -39,7 +39,17 @@ def after_request(response):
 @login_required
 def index():
     """Show portfolio of stocks"""
-    return apology("TODO")
+    result = db.execute("SELECT symbol, name, shares, price FROM users JOIN portfolio ON user_id WHERE id = ?", session["user_id"])
+    balance = db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])[0]["cash"]
+    total = balance
+    for stock in result:
+        stock_info = None
+        while stock_info == None:
+            stock_info = lookup(stock["symbol"], stock["name"])
+        stock["current_price"] = stock_info["price"]
+        total += (stock_info["price"] * stock["shares"])
+        stock["change"] = stock_info["change"]
+    return render_template("portfolio.html", result=result, balance=balance, total=total)
 
 
 @app.route("/search", methods=["GET"])
@@ -189,17 +199,37 @@ def buy():
     shares = request.form.get("shares")
     stock_info = lookup(symbol, name)
     if stock_info == None:
-        pass
+        flash("Unable to purchase.", "danger")
+        return redirect("/")
     else:
         price = stock_info["price"]
+        balance = db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])[0]["cash"]
+        if (float(shares) * float(price)) > balance:
+            flash("Not enough balance.", "danger")
+            return redirect("/")
         time = current_time()
-        db.execute("INSERT INTO portfolio (user_id, symbol, name, shares, price) VALUES(?, ?, ?, ?, ?)", session["user_id"], symbol, name, shares, price)
+        found = False
+        rows = db.execute("SELECT symbol FROM portfolio WHERE user_id = ?", session["user_id"])
+        for dict in rows:
+            if symbol in dict.values():
+                found = True
+                break
+        if found:
+            db.execute("UPDATE portfolio SET shares=shares+? WHERE user_id=? AND symbol=?", shares, session["user_id"], symbol)
+        else:
+            db.execute("INSERT INTO portfolio (user_id, symbol, name, shares, price) VALUES(?, ?, ?, ?, ?)", session["user_id"], symbol, name, shares, price)
         db.execute("INSERT INTO history (user_id, symbol, name, shares, price, time) VALUES(?, ?, ?, ?, ?, ?)", session["user_id"], symbol, name, shares, price, time)
+        db.execute("UPDATE users SET cash=cash-? WHERE id=?", (float(shares) * float(price)), session["user_id"])
+        count2 = len(rows)
         count = db.execute("SELECT COUNT(*) FROM history WHERE user_id = ?", session["user_id"])
         count = count[0]['COUNT(*)']
+        if count2 > 20:
+            flash("Reached limit of 20 stokcs. Please sell current stocks to purchase more.", "danger")
+            return redirect("/portfolio")
         if count > 10:
             db.execute("DELETE FROM history WHERE rowid = (SELECT rowid FROM history WHERE user_id = ? ORDER BY time ASC LIMIT 1)", session["user_id"])
-        return redirect("/search")
+        flash("Purchased.", "success")
+        return redirect("/")
 
 
 @app.route("/sell", methods=["GET", "POST"])
