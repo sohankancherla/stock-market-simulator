@@ -59,7 +59,7 @@ Before you begin, ensure you have the following installed:
 1. Clone the repo
 
 ```sh
-git clone https://github.com/sohan_kancherla/stock-market-simulator.git
+git clone https://github.com/sohankancherla/stock-market-simulator.git
 ```
 
 2. Navigate to the project directory
