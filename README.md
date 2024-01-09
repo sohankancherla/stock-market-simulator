@@ -56,11 +56,7 @@ Before you begin, ensure you have the following installed:
 
 ### Installation
 
-1. Clone the repo
-
-```sh
-git clone https://github.com/sohankancherla/stock-market-simulator.git
-```
+1. Fork and clone the repo
 
 2. Navigate to the project directory
 
